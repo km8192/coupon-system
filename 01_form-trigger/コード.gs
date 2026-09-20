@@ -207,3 +207,48 @@ function getSheet_(sheetName) {
   }
   return sheet;
 }
+
+/**
+ * ==========================================================
+ * 初回セットアップ用（手動実行）
+ * ==========================================================
+ * Apps Scriptエディタの関数選択で「setupSheets」を選び、
+ * 実行ボタンを押すと「回答記録」「キャンペーン設定」シートを
+ * 自動作成します（既に存在する場合はスキップされ、上書きされません）。
+ * 初回のみ実行してください。
+ */
+function setupSheets() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  let logSheet = ss.getSheetByName(CONFIG.LOG_SHEET_NAME);
+  if (!logSheet) {
+    logSheet = ss.insertSheet(CONFIG.LOG_SHEET_NAME);
+    logSheet.appendRow([
+      'タイムスタンプ', 'メールアドレス', 'クーポンコード',
+      'QRコード画像URL', '発行日時', '使用済みフラグ', '使用日時',
+    ]);
+    logSheet.setFrozenRows(1);
+    Logger.log('「' + CONFIG.LOG_SHEET_NAME + '」シートを作成しました。');
+  } else {
+    Logger.log('「' + CONFIG.LOG_SHEET_NAME + '」シートは既に存在するためスキップしました。');
+  }
+
+  let settingSheet = ss.getSheetByName(CONFIG.SETTING_SHEET_NAME);
+  if (!settingSheet) {
+    settingSheet = ss.insertSheet(CONFIG.SETTING_SHEET_NAME);
+    settingSheet.appendRow(['項目名', '値']);
+    settingSheet.appendRow(['割引方式', '%OFF']);
+    settingSheet.appendRow(['割引値', '10']);
+    settingSheet.appendRow(['メール件名', 'アンケートご協力のお礼にクーポンを差し上げます']);
+    settingSheet.appendRow(['メール本文テンプレート',
+      'この度はアンケートにご協力いただき、誠にありがとうございました。\n\n' +
+      '下記のクーポンをご利用ください。\n' +
+      '特典内容：{DISCOUNT}\n' +
+      'クーポンコード：{CODE}\n\n' +
+      '下記のQRコードを店舗にてご提示ください。\n{QR}']);
+    settingSheet.setFrozenRows(1);
+    Logger.log('「' + CONFIG.SETTING_SHEET_NAME + '」シートを作成しました（初期値入り）。');
+  } else {
+    Logger.log('「' + CONFIG.SETTING_SHEET_NAME + '」シートは既に存在するためスキップしました。');
+  }
+}
