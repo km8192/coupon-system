@@ -32,7 +32,7 @@ const CONFIG = {
  * フォーム送信時に実行されるメイン処理
  */
 function onFormSubmit(e) {
-  const email = e.response.getRespondentEmail();
+  const email = getRespondentEmail_(e);
   if (!email) {
     Logger.log('メールアドレスが取得できませんでした。フォーム設定を確認してください。');
     return;
@@ -54,6 +54,22 @@ function onFormSubmit(e) {
 
   // メール送信（主チャネル）
   sendCouponEmail_(email, record.code, record.qrUrl);
+}
+
+/**
+ * トリガーの設定方法によってイベント情報(e)の形が異なるため、
+ * どちらの形式でもメールアドレスを取得できるようにする。
+ * ・フォームに直接設定したトリガー: e.response.getRespondentEmail()
+ * ・スプレッドシートに設定した「フォーム送信時」トリガー: e.namedValues['メールアドレス']
+ */
+function getRespondentEmail_(e) {
+  if (e.response && typeof e.response.getRespondentEmail === 'function') {
+    return e.response.getRespondentEmail();
+  }
+  if (e.namedValues && e.namedValues['メールアドレス']) {
+    return e.namedValues['メールアドレス'][0];
+  }
+  return null;
 }
 
 /**
