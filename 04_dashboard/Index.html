@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+      background: #f5f5f7;
+      margin: 0;
+      padding: 20px 16px 40px;
+    }
+    h1 {
+      font-size: 18px;
+      margin: 0 0 16px;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .stat-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #1a73e8;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      font-size: 13px;
+    }
+    th, td {
+      padding: 8px 6px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+    th {
+      background: #fafafa;
+      font-weight: 600;
+      color: #444;
+    }
+    .badge {
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+    }
+    .badge.used {
+      background: #fce8e6;
+      color: #c5221f;
+    }
+    .badge.unused {
+      background: #e6f4ea;
+      color: #137333;
+    }
+    .table-wrap {
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>クーポン管理ダッシュボード</h1>
+
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-value"><?= stats.issued ?></div>
+      <div class="stat-label">総発行数</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value"><?= stats.used ?></div>
+      <div class="stat-label">使用済み数</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value"><?= stats.unused ?></div>
+      <div class="stat-label">未使用数</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value"><?= stats.usageRate ?>%</div>
+      <div class="stat-label">使用率</div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>メール</th>
+          <th>コード</th>
+          <th>発行日時</th>
+          <th>状態</th>
+          <th>使用日時</th>
+        </tr>
+      </thead>
+      <tbody>
+        <? for (var i = 0; i < stats.rows.length; i++) { ?>
+          <? var r = stats.rows[i]; ?>
+          <tr>
+            <td><?= r.email ?></td>
+            <td><?= r.code ?></td>
+            <td><?= r.issuedAt ?></td>
+            <td>
+              <? if (r.used) { ?>
+                <span class="badge used">使用済み</span>
+              <? } else { ?>
+                <span class="badge unused">未使用</span>
+              <? } ?>
+            </td>
+            <td><?= r.usedAt ?></td>
+          </tr>
+        <? } ?>
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

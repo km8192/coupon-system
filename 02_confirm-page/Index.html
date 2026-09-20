@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+      background: #f5f5f7;
+      margin: 0;
+      padding: 24px 16px;
+      display: flex;
+      justify-content: center;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 360px;
+      width: 100%;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+    h1 {
+      font-size: 18px;
+      margin: 0 0 16px;
+    }
+    input[type="email"] {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      background: #1a73e8;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:disabled {
+      background: #a0c3f5;
+    }
+    .result {
+      margin-top: 20px;
+    }
+    .result img {
+      width: 200px;
+      height: 200px;
+      margin: 12px 0;
+    }
+    .code {
+      font-size: 20px;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+    .discount {
+      font-size: 16px;
+      color: #1a73e8;
+      margin: 4px 0;
+    }
+    .used-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+    .used-badge.unused {
+      background: #e6f4ea;
+      color: #137333;
+    }
+    .used-badge.used {
+      background: #fce8e6;
+      color: #c5221f;
+    }
+    .error {
+      color: #c5221f;
+      font-size: 14px;
+      margin-top: 12px;
+    }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>クーポン確認</h1>
+    <div id="formArea">
+      <input type="email" id="emailInput" placeholder="アンケート回答時のメールアドレス" />
+      <button id="submitBtn" onclick="lookup()">クーポンを表示する</button>
+      <div id="errorArea" class="error hidden"></div>
+    </div>
+
+    <div id="resultArea" class="result hidden">
+      <div class="discount" id="discountText"></div>
+      <img id="qrImage" src="" alt="クーポンQRコード" />
+      <div class="code" id="codeText"></div>
+      <div id="usedBadge" class="used-badge"></div>
+    </div>
+  </div>
+
+  <script>
+    function lookup() {
+      const email = document.getElementById('emailInput').value.trim();
+      const btn = document.getElementById('submitBtn');
+      const errorArea = document.getElementById('errorArea');
+      const resultArea = document.getElementById('resultArea');
+
+      errorArea.classList.add('hidden');
+      resultArea.classList.add('hidden');
+
+      if (!email) {
+        errorArea.textContent = 'メールアドレスを入力してください。';
+        errorArea.classList.remove('hidden');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = '確認中...';
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          btn.disabled = false;
+          btn.textContent = 'クーポンを表示する';
+
+          if (!res.found) {
+            errorArea.textContent = res.message;
+            errorArea.classList.remove('hidden');
+            return;
+          }
+
+          document.getElementById('discountText').textContent = res.discountText;
+          document.getElementById('qrImage').src = res.qrUrl;
+          document.getElementById('codeText').textContent = res.code;
+
+          const badge = document.getElementById('usedBadge');
+          if (res.used) {
+            badge.textContent = '使用済み';
+            badge.className = 'used-badge used';
+          } else {
+            badge.textContent = '未使用';
+            badge.className = 'used-badge unused';
+          }
+
+          resultArea.classList.remove('hidden');
+        })
+        .withFailureHandler(function(err) {
+          btn.disabled = false;
+          btn.textContent = 'クーポンを表示する';
+          errorArea.textContent = 'エラーが発生しました。時間をおいて再度お試しください。';
+          errorArea.classList.remove('hidden');
+        })
+        .lookupCoupon(email);
+    }
+  </script>
+</body>
+</html>

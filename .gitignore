@@ -1,0 +1,6 @@
+# clasp（Google Apps Script CLI）が生成する認証情報・プロジェクト紐付けファイル
+.clasp.json
+.clasprc.json
+
+# OS関連
+.DS_Store
