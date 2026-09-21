@@ -113,9 +113,10 @@ function findExistingRecordByEmail_(logSheet, email) {
  * 重複しないユニークなコードを生成する
  */
 function generateUniqueCode_(logSheet) {
-  const existingCodes = logSheet.getRange(2, 3, Math.max(logSheet.getLastRow() - 1, 0), 1)
-    .getValues()
-    .flat();
+  const rowCount = logSheet.getLastRow() - 1;
+  const existingCodes = rowCount > 0
+    ? logSheet.getRange(2, 3, rowCount, 1).getValues().flat()
+    : [];
 
   let code;
   do {
