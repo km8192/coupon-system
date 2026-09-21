@@ -19,7 +19,7 @@
  */
 
 const CHECK_CONFIG = {
-  SPREADSHEET_ID: '', // 回答記録用スプレッドシートのIDを設定
+  SPREADSHEET_ID: '18pOPqnoxtebE-sI7qC8Aal7umayCgUMGj1zuDOQy1rU', // 回答記録用スプレッドシートのIDを設定
   LOG_SHEET_NAME: '回答記録',
   SETTING_SHEET_NAME: 'キャンペーン設定',
 };

@@ -22,7 +22,7 @@ const WEBAPP_CONFIG = {
   // このスクリプトが「②フォーム送信トリガー」と別プロジェクトの場合は
   // 回答記録用スプレッドシートのIDを指定してください。
   // 同一プロジェクト内に配置する場合は空文字のままでOKです（アクティブなシートを使用）。
-  SPREADSHEET_ID: '',
+  SPREADSHEET_ID: '18pOPqnoxtebE-sI7qC8Aal7umayCgUMGj1zuDOQy1rU',
   LOG_SHEET_NAME: '回答記録',
   SETTING_SHEET_NAME: 'キャンペーン設定',
 };

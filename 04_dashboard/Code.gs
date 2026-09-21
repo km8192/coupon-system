@@ -17,11 +17,11 @@
  */
 
 const DASHBOARD_CONFIG = {
-  SPREADSHEET_ID: '', // 回答記録用スプレッドシートのIDを設定
+  SPREADSHEET_ID: '18pOPqnoxtebE-sI7qC8Aal7umayCgUMGj1zuDOQy1rU', // 回答記録用スプレッドシートのIDを設定
   LOG_SHEET_NAME: '回答記録',
   ALLOWED_EMAILS: [
-    'operator@example.com', // 運営担当者のメールアドレスに置き換え
-    'developer@example.com', // 開発者のメールアドレスに置き換え
+    'kazuaki.m12.16@gmail.com',
+    // 'もう一人のメールアドレス', // 後で追加する場合はこの行のコメントを外して入力
   ],
 };
 
