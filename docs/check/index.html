@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>クーポンチェック</title>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+      background: #202124;
+      margin: 0;
+      padding: 16px;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 {
+      font-size: 16px;
+      margin: 0 0 12px;
+    }
+    #video-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 360px;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #000;
+    }
+    video {
+      width: 100%;
+      display: block;
+    }
+    canvas {
+      display: none;
+    }
+    .scan-hint {
+      font-size: 13px;
+      color: #9aa0a6;
+      margin-top: 10px;
+      text-align: center;
+    }
+    .resultCard {
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 360px;
+      box-sizing: border-box;
+      text-align: center;
+      display: none;
+    }
+    .resultCard.success {
+      background: #1e4620;
+      display: block;
+    }
+    .resultCard.already_used {
+      background: #4a2f18;
+      display: block;
+    }
+    .resultCard.not_found, .resultCard.error {
+      background: #4a1f1f;
+      display: block;
+    }
+    .resultTitle {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+    .resultSub {
+      font-size: 14px;
+      color: #ccc;
+    }
+    button {
+      margin-top: 16px;
+      padding: 12px 24px;
+      font-size: 15px;
+      background: #1a73e8;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <h1>クーポンチェック（QRスキャン）</h1>
+
+  <button id="startBtn">📷 スキャンを開始する</button>
+
+  <div id="video-wrap" class="hidden">
+    <video id="video" playsinline></video>
+  </div>
+  <canvas id="canvas"></canvas>
+  <div class="scan-hint" id="hint"></div>
+
+  <div id="resultCard" class="resultCard">
+    <div class="resultTitle" id="resultTitle"></div>
+    <div class="resultSub" id="resultSub"></div>
+    <button id="rescanBtn" onclick="restartScan()">次のクーポンをスキャン</button>
+  </div>
+
+  <script>
+    // 03_check-webapp（Apps Script）のデプロイURL。
+    // 03側を再デプロイしてURLが変わった場合はここも更新すること。
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxGjCMz4nN_xf3nkvcFJK4505ok35NNxSVgYx2X0ukToXD8GEWGf7mdV0b3HkAOs8s/exec';
+
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const hint = document.getElementById('hint');
+    const resultCard = document.getElementById('resultCard');
+    const resultTitle = document.getElementById('resultTitle');
+    const resultSub = document.getElementById('resultSub');
+
+    let scanning = true;
+    let stream = null;
+    const startBtn = document.getElementById('startBtn');
+    const videoWrap = document.getElementById('video-wrap');
+
+    async function startCamera() {
+      hint.textContent = 'カメラを起動しています...';
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment' }
+        });
+        startBtn.classList.add('hidden');
+        videoWrap.classList.remove('hidden');
+        video.srcObject = stream;
+        video.setAttribute('playsinline', true);
+        video.play();
+        hint.textContent = 'カメラをQRコードにかざしてください';
+        requestAnimationFrame(tick);
+      } catch (err) {
+        hint.textContent = 'カメラにアクセスできませんでした（' + err.name + ': ' + err.message + '）。端末の権限設定をご確認ください。';
+      }
+    }
+
+    startBtn.addEventListener('click', startCamera);
+
+    function tick() {
+      if (!scanning) return;
+
+      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+        if (code && code.data) {
+          scanning = false;
+          hint.textContent = '照合中...';
+          fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ code: code.data }),
+          })
+            .then(function(res) { return res.json(); })
+            .then(showResult)
+            .catch(function() {
+              showResult({ status: 'error', message: '通信エラーが発生しました。' });
+            });
+          return;
+        }
+      }
+      requestAnimationFrame(tick);
+    }
+
+    function showResult(res) {
+      resultCard.className = 'resultCard ' + res.status;
+
+      if (res.status === 'success') {
+        resultTitle.textContent = '✓ 使用済みにしました';
+        resultSub.textContent = (res.discountText ? res.discountText + ' / ' : '') + 'コード: ' + res.code;
+      } else if (res.status === 'already_used') {
+        resultTitle.textContent = '⚠ 使用済みのクーポンです';
+        resultSub.textContent = res.usedAt ? '使用日時: ' + res.usedAt : '';
+      } else if (res.status === 'not_found') {
+        resultTitle.textContent = '✕ クーポンが見つかりません';
+        resultSub.textContent = '別のクーポンか、無効なコードの可能性があります';
+      } else {
+        resultTitle.textContent = '✕ エラー';
+        resultSub.textContent = res.message || '';
+      }
+
+      hint.textContent = '';
+    }
+
+    function restartScan() {
+      resultCard.className = 'resultCard';
+      hint.textContent = 'カメラをQRコードにかざしてください';
+      scanning = true;
+      requestAnimationFrame(tick);
+    }
+  </script>
+</body>
+</html>

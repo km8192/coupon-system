@@ -31,6 +31,25 @@ function doGet(e) {
 }
 
 /**
+ * GitHub Pagesで公開する外部スキャンページ（カメラ利用）から
+ * fetch()で呼び出されるJSON API。
+ * Apps ScriptのHtmlService画面はカメラ権限がブロックされる端末があるため、
+ * カメラを使う画面だけをApps Scriptの外（GitHub Pages）に出し、
+ * このdoPostを照合用のバックエンドAPIとして呼び出す。
+ */
+function doPost(e) {
+  let code = '';
+  try {
+    code = JSON.parse(e.postData.contents).code;
+  } catch (err) {
+    code = e.parameter.code;
+  }
+  const result = checkCoupon(code);
+  return ContentService.createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
  * クライアントから呼び出される照合・使用済み更新処理
  * @param {string} code 読み取ったクーポンコード
  */
