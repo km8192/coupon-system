@@ -86,11 +86,13 @@
 <body>
   <h1>クーポンチェック（QRスキャン）</h1>
 
-  <div id="video-wrap">
+  <button id="startBtn">📷 スキャンを開始する</button>
+
+  <div id="video-wrap" class="hidden">
     <video id="video" playsinline></video>
   </div>
   <canvas id="canvas"></canvas>
-  <div class="scan-hint" id="hint">カメラをQRコードにかざしてください</div>
+  <div class="scan-hint" id="hint"></div>
 
   <div id="resultCard" class="resultCard">
     <div class="resultTitle" id="resultTitle"></div>
@@ -109,20 +111,28 @@
 
     let scanning = true;
     let stream = null;
+    const startBtn = document.getElementById('startBtn');
+    const videoWrap = document.getElementById('video-wrap');
 
     async function startCamera() {
+      hint.textContent = 'カメラを起動しています...';
       try {
         stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: 'environment' }
         });
+        startBtn.classList.add('hidden');
+        videoWrap.classList.remove('hidden');
         video.srcObject = stream;
         video.setAttribute('playsinline', true);
         video.play();
+        hint.textContent = 'カメラをQRコードにかざしてください';
         requestAnimationFrame(tick);
       } catch (err) {
-        hint.textContent = 'カメラにアクセスできませんでした。端末の権限設定をご確認ください。';
+        hint.textContent = 'カメラにアクセスできませんでした（' + err.name + ': ' + err.message + '）。端末の権限設定をご確認ください。';
       }
     }
+
+    startBtn.addEventListener('click', startCamera);
 
     function tick() {
       if (!scanning) return;
@@ -137,16 +147,12 @@
         if (code && code.data) {
           scanning = false;
           hint.textContent = '照合中...';
-          fetch(window.location.href, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ code: code.data }),
-          })
-            .then(function(res) { return res.json(); })
-            .then(showResult)
-            .catch(function() {
+          google.script.run
+            .withSuccessHandler(showResult)
+            .withFailureHandler(function() {
               showResult({ status: 'error', message: '通信エラーが発生しました。' });
-            });
+            })
+            .checkCoupon(code.data);
           return;
         }
       }
@@ -179,8 +185,6 @@
       scanning = true;
       requestAnimationFrame(tick);
     }
-
-    startCamera();
   </script>
 </body>
 </html>
