@@ -137,12 +137,16 @@
         if (code && code.data) {
           scanning = false;
           hint.textContent = '照合中...';
-          google.script.run
-            .withSuccessHandler(showResult)
-            .withFailureHandler(function() {
+          fetch(window.location.href, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ code: code.data }),
+          })
+            .then(function(res) { return res.json(); })
+            .then(showResult)
+            .catch(function() {
               showResult({ status: 'error', message: '通信エラーが発生しました。' });
-            })
-            .checkCoupon(code.data);
+            });
           return;
         }
       }

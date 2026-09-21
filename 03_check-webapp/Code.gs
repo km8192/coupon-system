@@ -24,10 +24,31 @@ const CHECK_CONFIG = {
   SETTING_SHEET_NAME: 'キャンペーン設定',
 };
 
+/**
+ * 通常のHtmlServiceはGoogleが用意するiframe内に表示され、
+ * その制限でカメラ（getUserMedia）の許可ダイアログ自体が
+ * 出せない端末があるため、ContentServiceで生のHTMLを返す。
+ * （この方式ではgoogle.script.runが使えないため、
+ * 　クライアント側はfetch()でdoPostを呼び出す方式に変更している）
+ */
 function doGet(e) {
-  return HtmlService.createHtmlOutputFromFile('Index')
-    .setTitle('クーポンチェック')
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+  const html = HtmlService.createHtmlOutputFromFile('Index').getContent();
+  return ContentService.createTextOutput(html).setMimeType(ContentService.MimeType.HTML);
+}
+
+/**
+ * クライアント（fetch）から呼び出される照合エンドポイント
+ */
+function doPost(e) {
+  let code = '';
+  try {
+    code = JSON.parse(e.postData.contents).code;
+  } catch (err) {
+    code = e.parameter.code;
+  }
+  const result = checkCoupon(code);
+  return ContentService.createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 /**
