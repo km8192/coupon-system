@@ -140,7 +140,8 @@ function createQrImage_(code) {
   file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
 
   // メール埋め込み・Web表示の両方で使いやすい直リンク形式に変換
-  return 'https://drive.google.com/uc?export=view&id=' + file.getId();
+  // （drive.google.com/uc?export=view は外部ページへの埋め込みでブロックされることがあるため使用しない）
+  return 'https://drive.google.com/thumbnail?id=' + file.getId() + '&sz=w500';
 }
 
 /**
